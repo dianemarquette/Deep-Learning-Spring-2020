@@ -94,8 +94,7 @@ class Sequential(object):
 		for i in range(self.dim_hidden.shape[0]):
 			print("Hidden layer: ",i," ,size: ",self.dim_hidden[i].item(),",Activation function: ",self.activ_functions[i],'-')
 		print("Ouput: ",self.net_output_size,'\n')
-
-		self.init_weight_bias()
+		
 
 	def __call__(self,input):
 		print('Start forward pass\n' )
