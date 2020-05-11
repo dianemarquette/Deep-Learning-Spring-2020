@@ -7,19 +7,20 @@ torch.set_grad_enabled(False)
 
 class Linear(object):
 
-	def __init__(self,input,dim_output):
+	def __init__(self,dim_input,dim_output):
 		
 		self.dim_output = dim_output
 
 		# Initialization of weights and biases of the layer
-		self.weights = torch.empty(dim_output, input.size()).normal_()
+		self.weights = torch.empty(dim_output, dim_input).normal_()
 		self.biases = torch.empty(dim_output,1).normal_()
-		return []
+		
 
 	def forward(self,input):
 		# Forward Pass. Computes the output of the linear layer and the local gradient.
-		z = torch.mm(self.weights,self.input) + self.biases
+		z = torch.mm(self.weights,input) + self.biases
 		self.local_grad = self.weights
+
 		return z
 
 	def  backward(self , *gradwrtoutput):
@@ -31,6 +32,7 @@ class Linear(object):
 class Relu(object):
 
 	def forward(self, x):
+
 		return torch.clamp(x, min=0.0)
 		
 
@@ -43,16 +45,17 @@ class Relu(object):
 
 class Tanh(object):
 
-	def f(x):
-		return (math.exp(x)-math.exp(-x))/(math.exp(x)+math.exp(-x))
+	def f(self,x):
+
+		return torch.tanh(x)
 
 	def forward(self, x):
-		x = input
-		return f(x)
+
+		return self.f(x)
 
 	def  backward(self , z):
-		 
-		return (1-f(z)**2)
+
+		return (1-self.f(z)**2)
 
 	def  param(self):
 		return  []
@@ -94,15 +97,39 @@ class Sequential(object):
 		for i in range(self.dim_hidden.shape[0]):
 			print("Hidden layer: ",i," ,size: ",self.dim_hidden[i].item(),",Activation function: ",self.activ_functions[i],'-')
 		print("Ouput: ",self.net_output_size,'\n')
-		
 
-	def __call__(self,input):
+		self.build_network()
+
+
+
+	def __call__(self,input,labels):
 		print('Start forward pass\n' )
-		#self.forward()
+		self.forward(input,labels)
+
+	def build_network(self):
+		self.network = []
+
+		self.network.append(Linear(self.net_input_size,self.dim_hidden[0]))
+		self.network.append(self.activ_functions[0])
+
+		for layer in range(self.dim_hidden.shape[0]-2):
+			self.network.append(Linear(self.dim_hidden[layer],self.dim_hidden[layer+1]))
+			self.network.append(self.activ_functions[layer+1])
+
+		self.network.append(Linear(self.dim_hidden[-1],self.net_output_size))
+		self.network.append(self.activ_functions[-1])
+
+		print(self.network)
 
 
-	def forward(self, x):
-		raise  NotImplementedError
+	def forward(self, x, y):
+		
+		for net in self.network:
+			x = net.forward(x)
+
+		self.loss = LossMSE().computeMSE(y,x)
+		print('loss = ',self.loss)
+	
 	def  backward(self , z):
 		raise  NotImplementedError
 	def  param(self):
@@ -110,11 +137,11 @@ class Sequential(object):
 
 
 class LossMSE(object):
-
-	class LossMSE(object):
-
+	
 	def computeMSE(self, y, y_pred):
+
 		MSE = (y_pred-y).pow(2).sum()
+		return MSE
 
 
 class LossCrossEntropy():
