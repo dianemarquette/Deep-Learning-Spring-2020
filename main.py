@@ -16,6 +16,8 @@ def project_1():
 
 def project_2():
 
+	# Data set creation
+
 	N = 1000 # Number of points
 
 	training_set = torch.rand(2,N)
@@ -46,7 +48,21 @@ def project_2():
 
 	net(training_set,train_labels)
 
+	# Training
+
+
 	return []
+
+def train_model(network, train_input, train_target, mini_batch_size, nb_epoch):
+
+	for e in range(nb_epoch):
+		sum_loss = 0
+		for b in range(0, train_input.size(0), mini_batch_size):
+			loss = network.forward(train_input,train_target)		# Compute forward pass and loss
+			network.backward()										# Compute backward pass and update the weight and biases
+			sum_loss = sum_loss + loss.item()
+		print(e,sum_loss)
+
 
 
 if __name__ == "__main__":

@@ -5,16 +5,33 @@ import sys
 
 torch.set_grad_enabled(False)
 
-class Linear(object):
+# Basic class to build linear layer
 
-	def __init__(self,dim_input,dim_output):
+class Linear:
+
+	def __init__(self,dim_input,dim_output,init_type):
 		
 		self.dim_output = dim_output
 
 		# Initialization of weights and biases of the layer
-		self.weights = torch.empty(dim_output, dim_input).normal_()
-		self.biases = torch.empty(dim_output,1).normal_()
+		if(init_type == 'He'):
+			C = math.sqrt(2/dim_input)
+		else:
+			C = math.sqrt(1/dim_input)
+
+
+		self.weights = torch.empty(dim_output, dim_input).normal_()*C
+		self.biases = torch.empty(dim_output,1).normal_()*C
 		
+	def update_weights(self,learning_rate):
+
+		if(learning_rate < 0):
+			print("Learning rate need to be superior to 0 !")
+			sys.exit(1)
+
+		#self.weights = self.weights - learning_rate* 
+		#self.biases = self.biases - learning_rate*
+
 
 	def forward(self,input):
 		# Forward Pass. Computes the output of the linear layer and the local gradient.
@@ -23,13 +40,15 @@ class Linear(object):
 
 		return z
 
-	def  backward(self , *gradwrtoutput):
+	def backward(self , *gradwrtoutput):
 		raise  NotImplementedError
 
-	def  param(self):
+	def param(self):
 		return  self.weights, self.biases, self.local_grad
 
-class Relu(object):
+# Activation functions classes 
+
+class Relu:
 
 	def forward(self, x):
 
@@ -43,7 +62,7 @@ class Relu(object):
 	def  param(self):
 		return  []
 
-class Tanh(object):
+class Tanh:
 
 	def f(self,x):
 
@@ -60,7 +79,23 @@ class Tanh(object):
 	def  param(self):
 		return  []
 
-class Sequential(object):
+class Sigmoid:
+
+	def f(self, x):
+		return 1/(1 + torch.exp(-x))
+
+	def forward(self, x):
+		return self.f(x)
+
+	def backward(self, z):
+		return torch.mm(self.f(x), (1 - self.f(x))) 
+
+	def param(self):
+		return []
+
+# Main class call to build the network
+
+class Sequential:
 
 	def __init__(self,input_size,output_size,hidden_sizes,list_activ_function,loss_function):
 
@@ -70,17 +105,19 @@ class Sequential(object):
 			sys.exit(1)
 
 		for i in range(len(list_activ_function)):
-			if(list_activ_function[i] != 'Relu' and list_activ_function[i] != 'Tanh'):
-				print('Error: Activation function allow are Tanh and Relu !')
+			if(list_activ_function[i] != 'Relu' and list_activ_function[i] != 'Tanh' and list_activ_function[i] != 'Sigmoid'):
+				print('Error: Activation function allow are Tanh, Relu and Sigmoid !')
 				sys.exit(1)
 
 		if(loss_function != 'MSE'):
 			print('Error: Loss function allow are MSE !')
+			sys.exit(1)
 
 		# Assignation of the inputs
 		self.net_input_size = input_size
 		self.net_output_size = output_size
 		self.dim_hidden = hidden_sizes
+		self.list_activ_string = list_activ_function # Easier to check string than object for comparison
 
 		self.activ_functions = []
 		for act in list_activ_function:
@@ -93,10 +130,10 @@ class Sequential(object):
 			self.loss = LossMSE()
 
 		# Print the network structure
-		print("\nInput: ",self.net_input_size)
+		print("\nInput: size:  ",self.net_input_size)
 		for i in range(self.dim_hidden.shape[0]):
-			print("Hidden layer: ",i," ,size: ",self.dim_hidden[i].item(),",Activation function: ",self.activ_functions[i],'-')
-		print("Ouput: ",self.net_output_size,'\n')
+			print("Hidden layer: ","size: ",self.dim_hidden[i].item(),",Activation function: ",self.list_activ_string[i],'-')
+		print("Ouput: size:  ",self.net_output_size,',Loss criterion:',loss_function,'\n')
 
 		self.build_network()
 
@@ -109,34 +146,53 @@ class Sequential(object):
 	def build_network(self):
 		self.network = []
 
-		self.network.append(Linear(self.net_input_size,self.dim_hidden[0]))
+		init_type = self.chose_init(0)
+
+		self.network.append(Linear(self.net_input_size,self.dim_hidden[0],init_type))
 		self.network.append(self.activ_functions[0])
 
 		for layer in range(self.dim_hidden.shape[0]-2):
-			self.network.append(Linear(self.dim_hidden[layer],self.dim_hidden[layer+1]))
+			init_type = self.chose_init(layer)
+			self.network.append(Linear(self.dim_hidden[layer],self.dim_hidden[layer+1],init_type))
 			self.network.append(self.activ_functions[layer+1])
 
-		self.network.append(Linear(self.dim_hidden[-1],self.net_output_size))
+		init_type = self.chose_init(-1)
+		self.network.append(Linear(self.dim_hidden[-1],self.net_output_size,init_type))
 		self.network.append(self.activ_functions[-1])
 
-		print(self.network)
+		#print(self.network)
 
+	def chose_init(self,layer):
+
+		if(self.list_activ_string[layer] == 'Relu'):
+			init_type = 'He'
+		else:
+			init_type = 'Xavier'
+		
+		return init_type
 
 	def forward(self, x, y):
-		
+
+		if(x.shape[0] != self.net_input_size):
+			print('Error: Not right input size for this network')
+
 		for net in self.network:
 			x = net.forward(x)
 
 		self.loss = LossMSE().computeMSE(y,x)
 		print('loss = ',self.loss)
+
+		return self.loss
 	
 	def  backward(self , z):
 		raise  NotImplementedError
+
 	def  param(self):
-		print(self.all_weights)
+		return []
 
+# Loss Functions
 
-class LossMSE(object):
+class LossMSE:
 	
 	def computeMSE(self, y, y_pred):
 
@@ -144,7 +200,7 @@ class LossMSE(object):
 		return MSE
 
 
-class LossCrossEntropy():
+class LossCrossEntropy:
 
 	def forward(self, *input):
 		raise  NotImplementedError
