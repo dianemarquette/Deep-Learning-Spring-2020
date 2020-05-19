@@ -58,7 +58,7 @@ def train_model(network, train_input, train_target, mini_batch_size, nb_epoch):
 		sum_loss = 0
 		for b in range(0, train_input.size(0), mini_batch_size):
 			loss = network.forward(train_input,train_target)		# Compute forward pass and loss
-			network.backward()										# Compute backward pass and update the weight and biases
+			network.backward(network.M)										# Compute backward pass and update the weight and biases
 			sum_loss = sum_loss + loss.item()
 		print(e,sum_loss)
 
