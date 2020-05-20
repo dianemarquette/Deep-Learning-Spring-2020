@@ -42,7 +42,7 @@ class Linear:
 
 	def backward(self , gradient):
 		  # Gradient with respect to weights
-		  self.grad_weights = torch.mm(gradient,torch.t(input))
+		  self.grad_weights = torch.mm(gradient,torch.t(self.input))
 		  # Gradient with respect to bias
 		  self.grad_bias = torch.sum(gradient)
 		  # Global gradient, to be propagated backwards
@@ -185,14 +185,14 @@ class Sequential:
 		for net in self.network:
 			x = net.forward(x)
 
-		self.loss = LossMSE().computeMSE(y,x)
+		self.loss.computeMSE(y,x)
 		print('loss = ',self.loss)
 
 		return self.loss
 	
 	def  backward(self):
 		z = self.loss.backward()
-		for net in self.network.reverse():
+		for net in reversed(self.network):
 			z = net.backward(z)
 
 	def  param(self):
@@ -211,7 +211,7 @@ class LossMSE:
 		return MSE
 
 	def backward(self,):
-		num_samples = y.shape[0]
+		num_samples = self.y.shape[0]
 		return num_samples*2*(self.y_pred-self.y)
 
 
