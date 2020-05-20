@@ -25,10 +25,6 @@ class Linear:
 		
 	def update_weights(self,learning_rate):
 
-		if(learning_rate < 0):
-			print("Learning rate need to be superior to 0 !")
-			sys.exit(1)
-
 		self.weights = self.weights - learning_rate*self.grad_weights
 		self.biases = self.biases - learning_rate*self.grad_bias
 
@@ -103,7 +99,7 @@ class Sigmoid:
 
 class Sequential:
 
-	def __init__(self,input_size,output_size,hidden_sizes,list_activ_function,loss_function):
+	def __init__(self,input_size,output_size,hidden_sizes,list_activ_function,loss_function,learning_rate):
 
 		# Verification of the inputs
 		if(hidden_sizes.shape[0] != len(list_activ_function)):
@@ -117,6 +113,10 @@ class Sequential:
 
 		if(loss_function != 'MSE'):
 			print('Error: MSE is the only loss function allowed !')
+			sys.exit(1)
+
+		if(learning_rate < 0):
+			print("Learning rate need to be superior to 0 !")
 			sys.exit(1)
 
 		# Assignation of the inputs
@@ -134,6 +134,8 @@ class Sequential:
 
 		if(loss_function == 'MSE'):
 			self.loss = LossMSE()
+
+		self.learning_rate = learning_rate
 
 		# Print the network structure
 		print("\nInput: size:  ",self.net_input_size)
