@@ -62,7 +62,7 @@ class Relu:
 
 	def  backward(self , gradient):
 		
-		return 1.0*gradient if self.activated > 0 else 0.0
+		return gradient if self.activated > 0 else 0.0
 
 	def  param(self):
 		return  []
