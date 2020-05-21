@@ -9,7 +9,7 @@ def main():
 def project_2():
 	torch.set_grad_enabled(False)
 
-	MINI_BATCH = 250
+	MINI_BATCH = 1
 	EPOCK = 1
 
 	eta = 1e-1  # Learning rate
@@ -64,7 +64,7 @@ def train_model(network, train_input, train_target, mini_batch_size, nb_epoch):
 		for b in range(0, train_input.size(1), mini_batch_size):
 			output = network.forward(train_input[:,b:b+mini_batch_size])		# Compute forward pass and loss
 			loss = network.loss_criterion(output,train_target[:,b:b+mini_batch_size])
-			network.backward() # Compute backward pass and update the weight and biases
+			network.backward() # Compute backward pass and update the weights and biases
 			print("Loss = ",loss)
 			print("sum_loss = ", sum_loss)
 			sum_loss = sum_loss + loss
@@ -75,7 +75,9 @@ def compute_nb_errors(network, input, target, mini_batch_size):
 	nb_errors = 0
 	for b in range(0,input.size(0), mini_batch_size):
 		output = network.forward(input[:,b:b+mini_batch_size])
-
+		print('output =', output)
+		print('target =', target)
+		
 		for k in range(mini_batch_size):
 			if ( not torch.all(torch.eq(target[0,b+k],output[:,k]))):
 				nb_errors = nb_errors + 1
