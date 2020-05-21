@@ -12,7 +12,7 @@ def project_2():
 	MINI_BATCH = 1
 	EPOCK = 1
 
-	eta = 1e-1  # Learning rate
+	eta = 1e-3  # Learning rate
 
 	# Data set creation
 
@@ -72,8 +72,8 @@ def compute_nb_errors(network, input, target, mini_batch_size):
 	nb_errors = 0
 	for b in range(0,input.size(1), mini_batch_size):
 		output = network.forward(input[:,b].view(2,1))
-		print('output =', output)
-		print('label =',target[0,b])
+		print('output =',output, output.max(0))
+		print('label =',target[:,b],target[:,b].max(0))
 
 		if ( not torch.all(torch.eq(target[0,b].max(0)[1],output.max(0)[1]))):
 			nb_errors = nb_errors + 1

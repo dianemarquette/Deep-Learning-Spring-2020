@@ -19,6 +19,7 @@ class Linear:
 		else:
 			C = math.sqrt(1/dim_input.item())
 
+		C = 1
 		self.weights = torch.empty(dim_output, dim_input).normal_()*C
 		self.biases = torch.empty(dim_output,1).normal_()*C
 
