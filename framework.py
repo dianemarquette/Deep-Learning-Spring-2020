@@ -19,7 +19,7 @@ class Linear:
 		else:
 			C = math.sqrt(1/dim_input.item())
 
-		C = 1
+		C = 0.001
 		self.weights = torch.empty(dim_output, dim_input).normal_()*C
 		self.biases = torch.empty(dim_output,1).normal_()*C
 
@@ -63,7 +63,7 @@ class Relu:
 		
 
 	def  backward(self , gradient):
-		return torch.ge(gradient,torch.zeros(gradient.size()))*gradient
+		return torch.ge(self.input,torch.zeros(self.input.size()))*gradient
 
 	def  param(self):
 		return  []
@@ -95,9 +95,8 @@ class Sigmoid:
 		return self.activated
 
 	def backward(self, gradient):
-		print("grad = ",gradient.shape)
-		print("f = ",torch.mm(self.activated, (1 - self.activated)))
-		return gradient*torch.mm(self.activated, (1 - self.activated)) 
+
+		return gradient*(self.activated*(1 - self.activated)) 
 
 	def param(self):
 		return []
@@ -109,7 +108,7 @@ class Sequential:
 	def __init__(self,input_size,output_size,hidden_sizes,list_activ_function,loss_function,learning_rate):
 
 		# Verification of the inputs
-		if(hidden_sizes.shape[0] != len(list_activ_function)):
+		if(hidden_sizes.shape[0] != len(list_activ_function)+1):
 			print("Error: We need ONE activation function for each hidden layer output!")
 			sys.exit(1)
 
@@ -147,9 +146,10 @@ class Sequential:
 		self.learning_rate = learning_rate
 
 		# Print the network structure
-		print("\nInput: size:  ",self.net_input_size)
-		for i in range(self.dim_hidden.shape[0]):
+		print("\nInput: size:  ",self.net_input_size.item())
+		for i in range(self.dim_hidden.shape[0]-1):
 			print("Hidden layer: ","size: ",self.dim_hidden[i].item(),",Activation function: ",self.list_activ_string[i],'-')
+		print("Hidden layer: ","size: ",self.dim_hidden[-1].item())
 		print("Ouput: size:  ",self.net_output_size,',Loss criterion:',loss_function,'\n')
 
 		self.build_network()
@@ -175,8 +175,7 @@ class Sequential:
 
 		init_type = self.choose_init(-1)
 		self.network.append(Linear(self.dim_hidden[-1],self.net_output_size,init_type,self.learning_rate))
-		self.network.append(self.activ_functions[-1])
-
+		
 		#print(self.network)
 
 	def choose_init(self,layer):
@@ -196,6 +195,7 @@ class Sequential:
 		for net in self.network:
 			x = net.forward(x)
 
+
 		return x
 
 	def loss_criterion(self, x, y):
@@ -209,6 +209,7 @@ class Sequential:
 
 		for net in reversed(self.network):
 			z = net.backward(z)
+
 
 
 	def  param(self):
