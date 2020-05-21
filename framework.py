@@ -15,10 +15,9 @@ class Linear:
 
 		# Initialization of weights and biases of the layer
 		if(init_type == 'He'):
-			C = math.sqrt(2/dim_input)
+			C = math.sqrt(2/dim_input.item())
 		else:
-			C = math.sqrt(1/dim_input)
-
+			C = math.sqrt(1/dim_input.item())
 
 		self.weights = torch.empty(dim_output, dim_input).normal_()*C
 		self.biases = torch.empty(dim_output,1).normal_()*C
@@ -35,18 +34,19 @@ class Linear:
 		# Forward Pass. Computes the output of the linear layer and the local gradient.
 		self.input = input
 		z = torch.mm(self.weights,input) + self.biases
-
+		
 		return z
 
 	def backward(self , gradient):
-		  # Gradient with respect to weights
-		  self.grad_weights = torch.mm(gradient,torch.t(self.input))
-		  # Gradient with respect to bias
-		  self.grad_bias = torch.sum(gradient)
-		  # Global gradient, to be propagated backwards
-		  self.grad_global = torch.mm(torch.t(self.weights),gradient)
-		  self.update_weights()
-		  return self.grad_global
+		# Gradient with respect to weights
+
+		self.grad_weights = torch.mm(gradient,torch.t(self.input))
+		# Gradient with respect to bias
+		self.grad_bias = torch.sum(gradient)
+		# Global gradient, to be propagated backwards
+		self.grad_global = torch.mm(torch.t(self.weights),gradient)
+		self.update_weights()
+		return self.grad_global
 
 
 	def param(self):
@@ -79,7 +79,7 @@ class Tanh:
 
 	def  backward(self , gradient):
 
-		return gradient*(1-self.f(self.activated)**2)
+		return gradient*(1-self.activated**2)
 
 	def  param(self):
 		return  []
@@ -94,6 +94,8 @@ class Sigmoid:
 		return self.activated
 
 	def backward(self, gradient):
+		print("grad = ",gradient.shape)
+		print("f = ",torch.mm(self.activated, (1 - self.activated)))
 		return gradient*torch.mm(self.activated, (1 - self.activated)) 
 
 	def param(self):
@@ -124,7 +126,7 @@ class Sequential:
 			sys.exit(1)
 
 		# Assignation of the inputs
-		self.net_input_size = input_size
+		self.net_input_size = torch.tensor([input_size])
 		self.net_output_size = output_size
 		self.dim_hidden = hidden_sizes
 		self.list_activ_string = list_activ_function # Easier to check string than object for comparison
@@ -135,6 +137,8 @@ class Sequential:
 				self.activ_functions.append(Relu())
 			elif(act == 'Tanh'):
 				self.activ_functions.append(Tanh())
+			elif(act == 'Sigmoid'):
+				self.activ_functions.append(Sigmoid())
 
 		if(loss_function == 'MSE'):
 			self.loss = LossMSE()

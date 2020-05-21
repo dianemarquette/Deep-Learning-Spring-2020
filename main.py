@@ -40,12 +40,10 @@ def project_2():
 			test_labels[1,i] = 1
 
 
-	# Test
+
+	
 	hidden = torch.tensor([25,25,25])
-	net = framework.Sequential(2,2,hidden,['Relu','Relu','Tanh'],'MSE',eta)
-
-	net(training_set,train_labels)
-
+	net = framework.Sequential(2,2,hidden,['Tanh','Tanh','Tanh'],'MSE',eta)
 	# Training
 	train_model(net, training_set, train_labels, MINI_BATCH,EPOCK)
 	# Testing
@@ -62,25 +60,23 @@ def train_model(network, train_input, train_target, mini_batch_size, nb_epoch):
 	for e in range(nb_epoch):
 		sum_loss = 0
 		for b in range(0, train_input.size(1), mini_batch_size):
-			output = network.forward(train_input[:,b:b+mini_batch_size])		# Compute forward pass and loss
-			loss = network.loss_criterion(output,train_target[:,b:b+mini_batch_size])
+			output = network.forward(train_input[:,b].view(2,1))		# Compute forward pass and loss
+			loss = network.loss_criterion(output,train_target[:,b].view(2,1))
 			network.backward() # Compute backward pass and update the weights and biases
-			print("Loss = ",loss)
-			print("sum_loss = ", sum_loss)
+
 			sum_loss = sum_loss + loss
 
-		print(e,sum_loss)
+		#print(e,sum_loss)
 
 def compute_nb_errors(network, input, target, mini_batch_size):
 	nb_errors = 0
-	for b in range(0,input.size(0), mini_batch_size):
-		output = network.forward(input[:,b:b+mini_batch_size])
+	for b in range(0,input.size(1), mini_batch_size):
+		output = network.forward(input[:,b].view(2,1))
 		print('output =', output)
-		print('target =', target)
-		
-		for k in range(mini_batch_size):
-			if ( not torch.all(torch.eq(target[0,b+k],output[:,k]))):
-				nb_errors = nb_errors + 1
+		print('label =',target[0,b])
+
+		if ( not torch.all(torch.eq(target[0,b].max(0)[1],output.max(0)[1]))):
+			nb_errors = nb_errors + 1
 	return nb_errors
 
 
