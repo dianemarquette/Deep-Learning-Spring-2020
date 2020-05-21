@@ -38,8 +38,7 @@ class Linear:
 
 	def backward(self , gradient):
 		  # Gradient with respect to weights
-		  print("input", self.input.shape)
-		  print("transposed input", torch.t(self.input).shape)
+
 		  self.grad_weights = torch.mm(gradient,torch.t(self.input))
 		  # Gradient with respect to bias
 		  self.grad_bias = torch.sum(gradient)
@@ -192,19 +191,15 @@ class Sequential:
 
 	def loss_criterion(self, x, y):
 		self.loss.computeMSE(y,x)
-		print('loss = ',self.loss)
-
-		return self.loss
+		
+		return self.loss.param()
 	
 	def  backward(self):
-		print('Start backpropagation')
 
 		z = self.loss.backward()
-		print(z.shape)
 
 		for net in reversed(self.network):
 			z = net.backward(z)
-			print(z.shape)
 
 
 	def  param(self):
@@ -216,7 +211,8 @@ class LossMSE:
 	
 	def computeMSE(self, y, y_pred):
 		# last step of the forward pass 
-		self.loss = (y_pred-y).pow(2).sum() # this is not the MEAN square error (but just the square error) 
+		num_samples = y.shape[1]
+		self.loss = (1/num_samples)*(y_pred-y).pow(2).sum() # this is not the MEAN square error (but just the square error) 
 		# actually it's correct because we compute it for one sample
 		self.y = y
 		self.y_pred = y_pred
@@ -224,7 +220,7 @@ class LossMSE:
 
 	def backward(self,):
 		num_samples = self.y.shape[0]
-		return num_samples*2*(self.y_pred-self.y)
+		return (1/num_samples)*2*(self.y_pred-self.y)
 
 	def param(self):
 		return self.loss

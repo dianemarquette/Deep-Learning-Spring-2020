@@ -9,7 +9,7 @@ def main():
 def project_2():
 	torch.set_grad_enabled(False)
 
-	MINI_BATCH = 1
+	MINI_BATCH = 250
 	EPOCK = 1
 
 	eta = 1e-1  # Learning rate
@@ -49,10 +49,10 @@ def project_2():
 	# Training
 	train_model(net, training_set, train_labels, MINI_BATCH,EPOCK)
 	# Testing
-	nb_test_errors = compute_nb_errors(net,training_set,train_labels,MINI_BATCH)
+	nb_test_errors = compute_nb_errors(net,test_set,test_labels,MINI_BATCH)
 
-	print('Test error for our network : {:0.2f}%% {:d}/{:d}'.format((100 * nb_test_errors) / test_input.size(0),
-                                                   nb_test_errors, test_input.size(0)))
+	print('Test error for our network : {:0.2f}%% {:d}/{:d}'.format((100 * nb_test_errors) / test_set.size(1),
+                                                   nb_test_errors, test_set.size(1)))
 
 
 	return []
@@ -61,21 +61,23 @@ def train_model(network, train_input, train_target, mini_batch_size, nb_epoch):
 
 	for e in range(nb_epoch):
 		sum_loss = 0
-		for b in range(0, train_input.size(0), mini_batch_size):
+		for b in range(0, train_input.size(1), mini_batch_size):
 			output = network.forward(train_input[:,b:b+mini_batch_size])		# Compute forward pass and loss
 			loss = network.loss_criterion(output,train_target[:,b:b+mini_batch_size])
-			network.backward()										# Compute backward pass and update the weight and biases
-			sum_loss = sum_loss + loss.param()
+			network.backward() # Compute backward pass and update the weight and biases
+			print("Loss = ",loss)
+			print("sum_loss = ", sum_loss)
+			sum_loss = sum_loss + loss
+
 		print(e,sum_loss)
 
 def compute_nb_errors(network, input, target, mini_batch_size):
-
+	nb_errors = 0
 	for b in range(0,input.size(0), mini_batch_size):
 		output = network.forward(input[:,b:b+mini_batch_size])
-		_, predicted_classes = output.max(1)
 
 		for k in range(mini_batch_size):
-			if target[b+k] != predicted_classes[k]:
+			if ( not torch.all(torch.eq(target[0,b+k],output[:,k]))):
 				nb_errors = nb_errors + 1
 	return nb_errors
 
