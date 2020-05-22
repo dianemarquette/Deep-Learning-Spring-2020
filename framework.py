@@ -30,8 +30,6 @@ class Linear:
 
 	def update_weights(self):
 
-
-
 		self.weights = self.weights - self.learning_rate*self.grad_weights
 		self.biases = self.biases - self.learning_rate*self.grad_bias
 
@@ -154,13 +152,6 @@ class Sequential:
 
 		self.learning_rate = learning_rate
 
-		# Print the network structure
-		print("\nInput: size:  ",self.net_input_size.item())
-		for i in range(self.dim_hidden.shape[0]):
-			print("Hidden layer: ","size: ",self.dim_hidden[i].item(),",Activation function: ",self.list_activ_string[i],'-')
-		
-		print("Ouput: size:  ",self.net_output_size,',Loss criterion:',loss_function,'\n')
-
 		self.build_network()
 
 
@@ -199,9 +190,7 @@ class Sequential:
 
 		for net in self.network:
 			x = net.forward(x)
-	 
-
-
+	
 		return x
 
 	def loss_criterion(self, x, y):
@@ -210,17 +199,14 @@ class Sequential:
 		return self.loss.param()
 	
 	def  backward(self):
-
+		
 		z = self.loss.backward()
-
 
 		for net in reversed(self.network):
 			z = net.backward(z)
 
-
-
 	def  param(self):
-		return []
+		return self.network
 
 # Loss Functions
 
