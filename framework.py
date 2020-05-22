@@ -5,7 +5,7 @@ import sys
 
 torch.set_grad_enabled(False)
 
-# Basic class to build linear layer
+# Basic class to build a linear layer
 
 class Linear:
 
@@ -14,7 +14,7 @@ class Linear:
 		
 		self.dim_output = dim_output
 
-		# Initialization of weights and biases of the layer
+		# Initialization of the weights and biases of the layer
 		if(init_type == 'He'):
 			C = math.sqrt(2/dim_input.item())
 		else:
@@ -37,14 +37,12 @@ class Linear:
 	def forward(self,input):
 		# Forward Pass. Computes the output of the linear layer and the local gradient.
 		self.input = input
-
 		z = torch.mm(self.weights,input) + self.biases
-		
 		return z
 
 	def backward(self , gradient):
+		
 		# Gradient with respect to weights
-
 		self.grad_weights = torch.mm(gradient,torch.t(self.input))
 		# Gradient with respect to bias
 		self.grad_bias = torch.sum(gradient)
@@ -70,7 +68,6 @@ class Relu:
 		self.input[self.input >= 0] = 1
 		self.input[self.input < 0] = 0
 		return self.input * gradient
-		#return torch.ge(self.input,torch.zeros(self.input.size()))*gradient
 
 	def  param(self):
 		return  []
@@ -108,7 +105,7 @@ class Sigmoid:
 	def param(self):
 		return []
 
-# Main class call to build the network
+# Main class called to build the network
 
 class Sequential:
 
@@ -195,7 +192,6 @@ class Sequential:
 
 	def loss_criterion(self, x, y):
 		self.loss.computeMSE(y,x)
-		
 		return self.loss.param()
 	
 	def  backward(self):
@@ -208,7 +204,7 @@ class Sequential:
 	def  param(self):
 		return self.network
 
-# Loss Functions
+# Loss Function
 
 class LossMSE:
 	
