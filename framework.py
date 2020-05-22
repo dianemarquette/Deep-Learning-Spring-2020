@@ -11,6 +11,7 @@ class Linear:
 
 	def __init__(self,dim_input,dim_output,init_type,learning_rate):
 		
+		
 		self.dim_output = dim_output
 
 		# Initialization of weights and biases of the layer
@@ -26,17 +27,19 @@ class Linear:
 		self.grad_bias = torch.empty(dim_output,1).zero_()
 
 		self.learning_rate = learning_rate
-		
+
 	def update_weights(self):
+
+
 
 		self.weights = self.weights - self.learning_rate*self.grad_weights
 		self.biases = self.biases - self.learning_rate*self.grad_bias
 
 
-
 	def forward(self,input):
 		# Forward Pass. Computes the output of the linear layer and the local gradient.
 		self.input = input
+
 		z = torch.mm(self.weights,input) + self.biases
 		
 		return z
@@ -54,7 +57,7 @@ class Linear:
 
 
 	def param(self):
-		return  self.weights, self.biases, self.grad_weights, self.grad_bias
+		return  self.weights, self.grad_weights, self.biases, self.grad_bias
 
 # Activation functions classes 
 
