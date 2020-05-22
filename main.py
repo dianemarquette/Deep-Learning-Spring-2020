@@ -64,6 +64,8 @@ def train_model(network, train_input, train_target, mini_batch_size, nb_epoch):
 			output = network.forward(train_input[b,:].view(2,1))		# Compute forward pass and loss
 			loss = network.loss_criterion(output,train_target[b,:].view(2,1))
 			network.backward() # Compute backward pass and update the weights and biases
+			sum_loss = sum_loss + loss
+		print(e,sum_loss)
 
 def compute_nb_errors(network, input, target, mini_batch_size):
 	nb_errors = 0
