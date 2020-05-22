@@ -18,10 +18,12 @@ class Linear:
 			C = math.sqrt(2/dim_input.item())
 		else:
 			C = math.sqrt(1/dim_input.item())
+		
+		self.weights = torch.empty(dim_output, dim_input).normal_(mean=0, std=1)*C
+		self.biases = torch.empty(dim_output,1).zero_()
 
-		C = 0.001
-		self.weights = torch.empty(dim_output, dim_input).normal_()*C
-		self.biases = torch.empty(dim_output,1).normal_()*C
+		self.grad_weights = torch.empty(dim_output,dim_input).zero_()
+		self.grad_bias = torch.empty(dim_output,1).zero_()
 
 		self.learning_rate = learning_rate
 		
@@ -29,6 +31,7 @@ class Linear:
 
 		self.weights = self.weights - self.learning_rate*self.grad_weights
 		self.biases = self.biases - self.learning_rate*self.grad_bias
+
 
 
 	def forward(self,input):
@@ -51,7 +54,7 @@ class Linear:
 
 
 	def param(self):
-		return  self.weights, self.biases, self.local_grad
+		return  self.weights, self.biases, self.grad_weights, self.grad_bias
 
 # Activation functions classes 
 
@@ -63,7 +66,10 @@ class Relu:
 		
 
 	def  backward(self , gradient):
-		return torch.ge(self.input,torch.zeros(self.input.size()))*gradient
+		self.input[self.input >= 0] = 1
+		self.input[self.input < 0] = 0
+		return self.input * gradient
+		#return torch.ge(self.input,torch.zeros(self.input.size()))*gradient
 
 	def  param(self):
 		return  []
@@ -108,7 +114,7 @@ class Sequential:
 	def __init__(self,input_size,output_size,hidden_sizes,list_activ_function,loss_function,learning_rate):
 
 		# Verification of the inputs
-		if(hidden_sizes.shape[0] != len(list_activ_function)+1):
+		if(hidden_sizes.shape[0] != len(list_activ_function)-1):
 			print("Error: We need ONE activation function for each hidden layer output!")
 			sys.exit(1)
 
@@ -147,18 +153,13 @@ class Sequential:
 
 		# Print the network structure
 		print("\nInput: size:  ",self.net_input_size.item())
-		for i in range(self.dim_hidden.shape[0]-1):
+		for i in range(self.dim_hidden.shape[0]):
 			print("Hidden layer: ","size: ",self.dim_hidden[i].item(),",Activation function: ",self.list_activ_string[i],'-')
-		print("Hidden layer: ","size: ",self.dim_hidden[-1].item())
+		
 		print("Ouput: size:  ",self.net_output_size,',Loss criterion:',loss_function,'\n')
 
 		self.build_network()
 
-
-
-	def __call__(self,input,labels):
-		print('Start forward pass\n' )
-		self.forward(input)
 
 	def build_network(self):
 		self.network = []
@@ -168,13 +169,14 @@ class Sequential:
 		self.network.append(Linear(self.net_input_size,self.dim_hidden[0],init_type,self.learning_rate))
 		self.network.append(self.activ_functions[0])
 
-		for layer in range(self.dim_hidden.shape[0]-2):
+		for layer in range(self.dim_hidden.shape[0]-1):
 			init_type = self.choose_init(layer)
 			self.network.append(Linear(self.dim_hidden[layer],self.dim_hidden[layer+1],init_type,self.learning_rate))
 			self.network.append(self.activ_functions[layer+1])
 
 		init_type = self.choose_init(-1)
 		self.network.append(Linear(self.dim_hidden[-1],self.net_output_size,init_type,self.learning_rate))
+		self.network.append(self.activ_functions[-1])
 		
 		#print(self.network)
 
@@ -194,6 +196,7 @@ class Sequential:
 
 		for net in self.network:
 			x = net.forward(x)
+	 
 
 
 		return x
@@ -206,6 +209,7 @@ class Sequential:
 	def  backward(self):
 
 		z = self.loss.backward()
+
 
 		for net in reversed(self.network):
 			z = net.backward(z)
@@ -221,16 +225,17 @@ class LossMSE:
 	
 	def computeMSE(self, y, y_pred):
 		# last step of the forward pass 
-		self.num_components = y.shape[0]*y.shape[1]
-		self.loss = (1/self.num_components)*(y_pred-y).pow(2).sum() 
+		self.number_elem = y.shape[0]*y.shape[1]
+		self.mse = (1/self.number_elem)*torch.pow(y_pred-y,2).sum() 
 		self.y = y
 		self.y_pred = y_pred
-		return self.loss
+		return self.mse
 
 	def backward(self):
-		return (1/self.num_components)*2*(self.y_pred-self.y)
+
+		return (1/self.number_elem)*2*(self.y_pred-self.y)
 
 	def param(self):
-		return self.loss
+		return self.mse
 
 
