@@ -1,5 +1,4 @@
-# Deep Learning
-Deep Learning Course with François Fleuret (Spring 2020)
+# Deep Learning Course with François Fleuret (Spring 2020)
 
 Define a list with all the objects composing our neural network (successive linear layers with activation functions in between them).
 
